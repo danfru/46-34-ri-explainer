@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <title>46-34 11th Street — Environmental Investigation Summary</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Source+Sans+3:wght@300;400;600;700&display=swap');
@@ -751,6 +752,120 @@ details summary:hover { color: var(--orange); }
   .section-divider { break-after: avoid; }
   body { background: white; }
 }
+
+/* INTERACTIVE MAP */
+.map-section {
+  margin-top: 48px;
+  border-top: 2px solid var(--bone);
+  padding-top: 36px;
+}
+.map-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--charcoal);
+  margin-bottom: 6px;
+}
+.map-section-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+}
+#site-map {
+  width: 100%;
+  height: 500px;
+  border: 1px solid #d0c8be;
+  border-radius: 2px;
+}
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 14px;
+  padding: 14px 18px;
+  background: var(--light-bg);
+  border-left: 4px solid var(--orange);
+  align-items: center;
+  font-size: 13px;
+}
+.map-legend-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--charcoal);
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+}
+.legend-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+.legend-diamond {
+  width: 12px;
+  height: 12px;
+  transform: rotate(45deg);
+  border: 2px solid white;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+.map-note {
+  font-size: 11px;
+  color: #999;
+  margin-top: 8px;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 2px !important;
+  box-shadow: 0 3px 14px rgba(0,0,0,0.25) !important;
+}
+.map-popup-id {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.map-popup-type {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding: 2px 8px;
+  display: inline-block;
+  color: white;
+  border-radius: 1px;
+}
+.map-popup-detail {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+.map-popup-flag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  margin-top: 5px;
+  border-radius: 1px;
+}
 </style>
 </head>
 <body>
@@ -860,6 +975,22 @@ details summary:hover { color: var(--orange); }
         <p>7 vapor probes installed at 5 ft depth at the planned excavation level. 8 samples (including 1 duplicate) collected and analyzed using TO-15 method for VOCs.</p>
       </div>
     </div>
+
+    <!-- INTERACTIVE SAMPLE LOCATION MAP -->
+    <div class="map-section">
+      <div class="map-section-title">Sample Location <span style="color:var(--orange)">Map</span></div>
+      <div class="map-section-subtitle">Interactive map of all 21 sampling locations across the 12,450 SF site. Click any marker for details. Scroll or use controls to zoom.</div>
+      <div id="site-map"></div>
+      <div class="map-legend">
+        <span class="map-legend-title">Legend</span>
+        <span class="map-legend-item"><span class="legend-circle" style="background:#323e4c;"></span> Soil Boring (SB-1–10)</span>
+        <span class="map-legend-item"><span class="legend-circle" style="background:#185676;"></span> Groundwater Well (MW-1–4)</span>
+        <span class="map-legend-item"><span class="legend-circle" style="background:#e37115;"></span> Vapor Probe (VP-1–7)</span>
+        <span class="map-legend-item"><span class="legend-circle" style="background:#c0392b; outline: 2px solid #c0392b; outline-offset: 2px;"></span> Hotspot Location</span>
+      </div>
+      <div class="map-note">Coordinates are approximate. Sample locations shown are representative of field positions as documented in the Remedial Investigation Report (March 2026).</div>
+    </div>
+
   </div>
 </div>
 
@@ -1303,6 +1434,149 @@ details summary:hover { color: var(--orange); }
   Prepared for ZD Jasper Realty &nbsp;·&nbsp; VCP Site No. 25TMP0887Q &nbsp;·&nbsp; March 2026<br><br>
   This explainer is a summary communication tool and does not replace the Remedial Investigation Report or regulatory guidance. All findings should be reviewed with a Qualified Environmental Professional.
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+  // Site center: 46-34 11th Street, Long Island City, Queens NY
+  var CENTER = [40.74490, -73.95063];
+
+  var map = L.map('site-map', {
+    center: CENTER,
+    zoom: 19,
+    maxZoom: 21,
+    scrollWheelZoom: true
+  });
+
+  // Basemap tiles
+  var streets = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 21
+  });
+
+  var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '© Esri — Source: Esri, Maxar, GeoEye',
+    maxZoom: 21
+  });
+
+  satellite.addTo(map);
+
+  L.control.layers({ 'Satellite': satellite, 'Street Map': streets }, {}, { position: 'topright' }).addTo(map);
+
+  // Site boundary (approximate polygon for three lots)
+  var siteBoundary = L.polygon([
+    [40.74513, -73.95093],
+    [40.74513, -73.95032],
+    [40.74465, -73.95032],
+    [40.74465, -73.95093]
+  ], {
+    color: '#e37115',
+    weight: 2,
+    opacity: 0.9,
+    fillColor: '#e37115',
+    fillOpacity: 0.07,
+    dashArray: '6 4'
+  }).addTo(map);
+
+  siteBoundary.bindPopup('<strong style="font-family:\'Barlow Condensed\',sans-serif;font-size:15px;text-transform:uppercase;">46-34 11th Street</strong><br><span style="font-size:12px;color:#666;">Block 47, Lots 25, 28 &amp; 30 &nbsp;·&nbsp; 12,450 SF<br>Long Island City, Queens, NY</span>');
+
+  // ── Helper: make a circle marker ──────────────────────────────────────────
+  function makeMarker(latlng, color, radius, hotspot) {
+    return L.circleMarker(latlng, {
+      radius: radius,
+      fillColor: color,
+      color: hotspot ? '#c0392b' : 'white',
+      weight: hotspot ? 2.5 : 1.5,
+      opacity: 1,
+      fillOpacity: 0.92
+    });
+  }
+
+  function popupHTML(id, typeLabel, typeColor, detail, flag, flagColor) {
+    var html = '<div class="map-popup-id">' + id + '</div>';
+    html += '<div class="map-popup-type" style="background:' + typeColor + ';">' + typeLabel + '</div>';
+    html += '<div class="map-popup-detail">' + detail + '</div>';
+    if (flag) {
+      html += '<div class="map-popup-flag" style="background:' + flagColor + ';color:white;">' + flag + '</div>';
+    }
+    return html;
+  }
+
+  // ── SOIL BORINGS ──────────────────────────────────────────────────────────
+  var borings = [
+    { id:'SB-1',  ll:[40.74508, -73.95084], detail:'Drilled to ~10 ft bgs. Primarily fill material; metals detected.', flag:null },
+    { id:'SB-2',  ll:[40.74506, -73.95060], detail:'Fill and native material encountered. Metals within fill layer.', flag:null },
+    { id:'SB-3',  ll:[40.74508, -73.95042], detail:'Pesticide hotspot — chlordane up to 520 µg/kg (standard: 14 µg/kg). DDT and dieldrin also detected.', flag:'⚠ Pesticide Hotspot', flagColor:'#c0392b' },
+    { id:'SB-4',  ll:[40.74496, -73.95085], detail:'Metals and PAHs in fill layer (0–4 ft). Lead and arsenic exceed unrestricted SCOs.', flag:null },
+    { id:'SB-5',  ll:[40.74493, -73.95060], detail:'Central location. Metals in upper fill; no exceedances at depth.', flag:null },
+    { id:'SB-6',  ll:[40.74495, -73.95042], detail:'PAH hotspot — benzo compounds up to 7× cleanup objective. Indicator of historic auto garage use.', flag:'⚠ PAH Hotspot', flagColor:'#c0392b' },
+    { id:'SB-7',  ll:[40.74480, -73.95085], detail:'Southwestern lot. Metals and SVOCs detected in fill.', flag:null },
+    { id:'SB-8',  ll:[40.74478, -73.95063], detail:'PCB-1254 detected at 760 µg/kg (standard: 100 µg/kg). Potential TSCA-regulated waste during excavation.', flag:'⚠ PCB Impact', flagColor:'#c0392b' },
+    { id:'SB-9',  ll:[40.74478, -73.95044], detail:'PCB-1254 co-detected here. Southeastern cluster with MW-4 groundwater impact.', flag:'⚠ PCB Impact', flagColor:'#c0392b' },
+    { id:'SB-10', ll:[40.74470, -73.95068], detail:'Southern boundary boring. Fill to approximately 4 ft; native soil below.', flag:null }
+  ];
+
+  borings.forEach(function(b) {
+    var hotspot = !!b.flag;
+    makeMarker(b.ll, '#323e4c', hotspot ? 9 : 7, hotspot)
+      .addTo(map)
+      .bindPopup(popupHTML(b.id, 'Soil Boring', '#323e4c', b.detail, b.flag, b.flagColor));
+  });
+
+  // ── GROUNDWATER WELLS ─────────────────────────────────────────────────────
+  var wells = [
+    { id:'MW-1', ll:[40.74512, -73.95086], detail:'NW corner. Installed to ~13 ft. Iron, manganese, and SVOCs (PAHs) exceed Class GA standards.', flag:'⚠ GW Exceedance', flagColor:'#e07b00' },
+    { id:'MW-2', ll:[40.74512, -73.95040], detail:'NE corner. SVOCs and metals exceed standards. No VOCs, PFAS, or pesticides above GW limits.', flag:'⚠ GW Exceedance', flagColor:'#e07b00' },
+    { id:'MW-3', ll:[40.74467, -73.95086], detail:'SW corner. Metals (iron, lead) slightly above Class GA standards. No organic compound exceedances.', flag:null },
+    { id:'MW-4', ll:[40.74467, -73.95040], detail:'SE corner. PCB-1254 detected in groundwater — linked to SB-8/SB-9 soil impact. Metals and SVOCs also exceed standards.', flag:'⚠ PCB in Groundwater', flagColor:'#c0392b' }
+  ];
+
+  wells.forEach(function(w) {
+    var hotspot = w.flag && w.flag.indexOf('PCB') > -1;
+    makeMarker(w.ll, '#185676', hotspot ? 9 : 8, hotspot)
+      .addTo(map)
+      .bindPopup(popupHTML(w.id, 'Groundwater Well', '#185676', w.detail, w.flag, w.flagColor));
+  });
+
+  // ── VAPOR PROBES ──────────────────────────────────────────────────────────
+  var probes = [
+    { id:'VP-1', ll:[40.74504, -73.95075], detail:'5 ft depth. 1,2,4-Trimethylbenzene exceeded NYSDOH vapor guidance. Petroleum-related VOC.', flag:'⚠ Vapor Exceedance', flagColor:'#e07b00' },
+    { id:'VP-2', ll:[40.74504, -73.95052], detail:'5 ft depth. Trimethylbenzene exceeded guidance. Cellar vapor pathway requires mitigation.', flag:'⚠ Vapor Exceedance', flagColor:'#e07b00' },
+    { id:'VP-3', ll:[40.74497, -73.95078], detail:'5 ft depth. VOC concentrations below applicable guidance thresholds at this location.', flag:null },
+    { id:'VP-4', ll:[40.74491, -73.95057], detail:'5 ft depth. Trimethylbenzene exceeded NYSDOH vapor guidance at this central location.', flag:'⚠ Vapor Exceedance', flagColor:'#e07b00' },
+    { id:'VP-5', ll:[40.74484, -73.95076], detail:'5 ft depth. VOC concentrations below guidance thresholds.', flag:null },
+    { id:'VP-6', ll:[40.74484, -73.95051], detail:'5 ft depth. Trimethylbenzene exceeded vapor guidance. 4 of 7 probes exceeded standards site-wide.', flag:'⚠ Vapor Exceedance', flagColor:'#e07b00' },
+    { id:'VP-7', ll:[40.74475, -73.95063], detail:'5 ft depth. Southern extent of vapor survey. VOCs below guidance at this location.', flag:null }
+  ];
+
+  probes.forEach(function(p) {
+    var hotspot = !!p.flag;
+    makeMarker(p.ll, '#e37115', hotspot ? 8 : 6, false)
+      .addTo(map)
+      .bindPopup(popupHTML(p.id, 'Vapor Probe', '#e37115', p.detail, p.flag, p.flagColor));
+  });
+
+  // ── Label overlays (hover-friendly) ───────────────────────────────────────
+  function labelIcon(text, color) {
+    return L.divIcon({
+      className: '',
+      html: '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:10px;font-weight:700;color:' + color + ';white-space:nowrap;text-shadow:0 0 3px white,0 0 3px white,0 0 3px white;line-height:1;">' + text + '</div>',
+      iconAnchor: [-9, 7]
+    });
+  }
+
+  borings.forEach(function(b) {
+    L.marker(b.ll, { icon: labelIcon(b.id, '#323e4c'), interactive: false }).addTo(map);
+  });
+  wells.forEach(function(w) {
+    L.marker(w.ll, { icon: labelIcon(w.id, '#185676'), interactive: false }).addTo(map);
+  });
+  probes.forEach(function(p) {
+    L.marker(p.ll, { icon: labelIcon(p.id, '#9d4f00'), interactive: false }).addTo(map);
+  });
+
+})();
+</script>
 
 </body>
 </html>
